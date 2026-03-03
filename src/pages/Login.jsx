@@ -11,20 +11,25 @@ const Login = () => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [loading, setLoading] = useState(false)
-    const { backend_URL } = useAppContext()
+    const { setIsLogged, backend_URL, getUserData } = useAppContext()
     const navigate = useNavigate()
 
     const onSubmitHandler = async (e) => {
-        e.preventDefault();
-        axios.defaults.withCredentials = true
+        e.preventDefault()
+
         setLoading(true)
         if (isCreateAccount) {
+            const user = {
+                username: name,
+                password: password,
+                email: email
+            }
+
             try {
                 const response = await axios.post(
-                    `${backend_URL}/register`,
-                    { name, email, password }
+                    "/register",
+                    user
                 )
-                console.log(response);
 
                 toast.success("Account creeated successfully")
                 navigate("/")
@@ -42,22 +47,30 @@ const Login = () => {
             }
         }
         else {
-            try {
-                const response = axios.post(
-                    `${backend_URL}/login`,
-                    { email, password }
-                )
-                console.log(response);
-
-                toast.success("LoggedIn successfully")
-                navigate("/")
+            const user = {
+                password: password,
+                email: email
             }
-            catch (ex) {
+
+            try {
+                const response = await axios.post(
+                    "/login",
+                    user
+                );
+                console.log(response)
+
+
+                toast.success("Logged in successfully");
+                await getUserData();
+                localStorage.setItem("isLogged", "true")
+                setIsLogged(true);
+                navigate("/");
+
+            } catch (ex) {
                 if (ex.response) {
-                    toast.error(ex.response.data.message)
-                }
-                else {
-                    toast.error("Network Error")
+                    toast.error(ex.response.data.message);
+                } else {
+                    toast.error("Network Error");
                 }
             }
             finally {
@@ -145,8 +158,8 @@ const Login = () => {
                             Forgot password?</Link>
                     </div>
                     <div className="d-flex justify-content-center">
-                        <button type="submit" className="btn btn-primary w-50" display={loading}>
-                            {loading ? "Loading" : isCreateAccount ? "Sign up" : "Login"}
+                        <button type="submit" className="btn btn-primary w-50">
+                            {loading ? "Loading" : (isCreateAccount ? "Sign up" : "Login")}
                         </button>
                     </div>
                 </form>
@@ -154,26 +167,30 @@ const Login = () => {
                 <div className="text-center mt-3">
                     <div className="mb-0">
                         {isCreateAccount ?
-                            <div className="d-flex gap-1 justify-content-center">
-                                <span>Already have an account?</span>
-                                <span
-                                    className="text-decoration-underline"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => setisCreateAccount(false)}
-                                >
-                                    Login here
-                                </span>
-                            </div> :
-                            <div className="d-flex gap-1 justify-content-center">
-                                <span>Don't have an account?</span>
-                                <span
-                                    className="text-decoration-underline"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => setisCreateAccount(true)}
-                                >
-                                    Signup here
-                                </span>
-                            </div>
+                            (
+                                <div className="d-flex gap-1 justify-content-center">
+                                    <span>Already have an account?</span>
+                                    <span
+                                        className="text-decoration-underline"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => setisCreateAccount(false)}
+                                    >
+                                        Login here
+                                    </span>
+                                </div>
+                            ) :
+                            (
+                                <div className="d-flex gap-1 justify-content-center">
+                                    <span>Don't have an account?</span>
+                                    <span
+                                        className="text-decoration-underline"
+                                        style={{ cursor: "pointer" }}
+                                        onClick={() => setisCreateAccount(true)}
+                                    >
+                                        Signup here
+                                    </span>
+                                </div>
+                            )
                         }
                     </div>
                 </div>
