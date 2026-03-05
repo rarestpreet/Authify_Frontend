@@ -4,7 +4,9 @@ import { useAppContext } from "../context/AppContext";
 
 const Header = () => {
     const navigate = useNavigate()
-    const { isLogged, userData } = useAppContext()
+    const { userData } = useAppContext()
+
+    console.log(userData)
 
     return (
         <div className="text-center d-flex flex-column align-items-center justify-content-center py-5 px-3" style={{ minHeight: "80vh" }}>
@@ -17,8 +19,11 @@ const Header = () => {
                 Let's start with a quick product tour and you can setup the authentication in no time!
             </p>
 
-            <button className="btn btn-outline-dark rounded-pill px-4 py-2" onClick={() => navigate("/login")}>
-                Get started
+            <button className="btn btn-outline-dark rounded-pill px-4 py-2"
+                onClick={() => navigate("/login")}
+                disabled={Boolean(userData?.username)}
+            >
+                {userData?.username ? "Logged In" : "Get Started"}
             </button>
         </div>
     )

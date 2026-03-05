@@ -1,19 +1,36 @@
 import { useNavigate } from "react-router-dom";
 import Assets from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
-import { useRef, useState } from "react";
-import axios from "axios";
+import { useRef, useState, useEffect } from "react";
+import api from "../util/axiosConfig";
 import { toast } from "react-toastify";
 
 const MenuBar = () => {
     const [dropDownOpen, setDropDownOpen] = useState(false)
     const dropDownRef = useRef(null)
     const navigate = useNavigate();
-    const { userData, setUserData} = useAppContext()
+    const { userData, setUserData } = useAppContext()
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (
+                dropDownRef.current &&
+                !dropDownRef.current.contains(event.target)
+            ) {
+                setDropDownOpen(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     const handleLogout = async () => {
         try {
-            await axios.post(
+            await api.post(
                 "/logout"
             )
 
@@ -27,6 +44,20 @@ const MenuBar = () => {
             else {
                 toast.error("Network error")
             }
+        }
+    }
+
+    const sendVerificationOtp = async () => {
+        try {
+            await api.get(
+                "/send-verify-otp"
+            )
+
+            toast.success("Otp sent successfully")
+            navigate("/email-verify")
+        }
+        catch (ex) {
+            toast.error(ex.respone ? ex.respone.message : "Network error")
         }
     }
 
@@ -64,7 +95,7 @@ const MenuBar = () => {
                                         style={{
                                             cursor: "pointer"
                                         }}
-                                        onClick={() => { }}
+                                        onClick={sendVerificationOtp }
                                     >
                                         Verify email
                                     </div>
