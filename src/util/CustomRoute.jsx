@@ -1,4 +1,3 @@
-import { toast } from "react-toastify"
 import { useAppContext } from "../context/AppContext"
 import { Navigate, Outlet } from "react-router-dom"
 
@@ -24,7 +23,15 @@ export const ProtectedRoute = () => {
 }
 
 export const PublicRoute = () => {
-    const { userData } = useAppContext()
+    const { userData, loading } = useAppContext()
+
+    if (loading) {
+        return (
+            <div className="vh-100 d-flex justify-content-center align-items-center">
+                Loading...
+            </div>
+        )
+    }
 
     if (userData?.username) {
         return <Navigate to="/" state={{ message: "Already logged in" }} replace />

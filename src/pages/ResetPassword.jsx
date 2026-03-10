@@ -6,15 +6,35 @@ import api from "../util/axiosConfig";
 import { toast } from "react-toastify";
 import { useAppContext } from "../context/AppContext";
 
+const RESET_STORAGE_KEY = "resetPasswordState"
+
+const getStoredResetState = () => {
+    try {
+        const stored = sessionStorage.getItem(RESET_STORAGE_KEY)
+        return stored ? JSON.parse(stored) : {}
+    } catch {
+        return {}
+    }
+}
+
 const ResetPassword = () => {
     const inputRef = useRef([])
     const navigate = useNavigate()
-    const [email, setEmail] = useState("")
+    const stored = getStoredResetState()
+    const [email, setEmail] = useState(stored.email || "")
     const [newPassword, setNewPassword] = useState("")
-    const [isEmailSent, setIsEmailSent] = useState(false)
-    const [otp, setOtp] = useState("")
-    const [isOtpSubmitted, setIsOtpSubmitted] = useState(false)
-    const { loading, setLoading } = useAppContext()
+    const [isEmailSent, setIsEmailSent] = useState(stored.isEmailSent || false)
+    const [otp, setOtp] = useState(stored.otp || "")
+    const [isOtpSubmitted, setIsOtpSubmitted] = useState(stored.isOtpSubmitted || false)
+    const { loading, setLoading, setUserData } = useAppContext()
+
+    const saveResetState = (state) => {
+        sessionStorage.setItem(RESET_STORAGE_KEY, JSON.stringify(state))
+    }
+
+    const clearResetState = () => {
+        sessionStorage.removeItem(RESET_STORAGE_KEY)
+    }
 
     const logout = async () => {
         try {
@@ -46,6 +66,7 @@ const ResetPassword = () => {
 
             toast.success("Otp sent on email")
             setIsEmailSent(true)
+            saveResetState({ email, isEmailSent: true, otp: "", isOtpSubmitted: false })
         } catch (ex) {
             console.log(ex.response ? ex.response.message : "Network error");
         } finally {
@@ -55,10 +76,11 @@ const ResetPassword = () => {
 
     const handleOtpVerify = () => {
         setLoading(true)
-        const otp = inputRef.current.map((input) => input.value).join("")
+        const enteredOtp = inputRef.current.filter(Boolean).map((input) => input.value).join("")
 
-        setOtp(otp)
+        setOtp(enteredOtp)
         setIsOtpSubmitted(true)
+        saveResetState({ email, isEmailSent: true, otp: enteredOtp, isOtpSubmitted: true })
         setLoading(false)
     }
 
@@ -78,6 +100,7 @@ const ResetPassword = () => {
                 info
             )
 
+            clearResetState()
             logout()
             toast.success("Password changed successfully!")
             navigate("/login")

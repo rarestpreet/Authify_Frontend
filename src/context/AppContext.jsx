@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../util/axiosConfig";
 
@@ -17,6 +18,7 @@ const AppContext = createContext({
 export const AppContextProvider = ({ children }) => {
     const [userData, setUserData] = useState({})
     const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
 
     const getUserData = async () => {
         setLoading(true)
@@ -63,7 +65,6 @@ export const AppContextProvider = ({ children }) => {
 
                 if (error.response?.status === 401) {
                     setUserData({});
-                    setIsLogged(false);
                     toast.error("Session expired. Please login again.");
                     navigate("/login");
                 }
@@ -75,7 +76,7 @@ export const AppContextProvider = ({ children }) => {
         return () => {
             api.interceptors.response.eject(interceptor);
         };
-    }, []);
+    }, [navigate]);
 
     return (
         <AppContext.Provider value={contextValue}>
