@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import api from "../util/axiosConfig";
+import { useNavigate } from "react-router-dom";
 
 const AppContext = createContext({
     userData: {
@@ -11,12 +12,21 @@ const AppContext = createContext({
     setUserData: () => { },
     getUserData: async () => { },
     loading: false,
-    setLoading: () => { }
+    setLoading: () => { },
+    isLogged: false,
+    setIsLogged: () => { }
 })
 
 export const AppContextProvider = ({ children }) => {
-    const [userData, setUserData] = useState({})
+
+    const [userData, setUserData] = useState({
+        userId: "",
+        username: "",
+        isAccountVerified: false
+    })
+    const [isLogged, setIsLogged] = useState(false)
     const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
 
     const getUserData = async () => {
         setLoading(true)
@@ -25,19 +35,15 @@ export const AppContextProvider = ({ children }) => {
             const response = await api.get(
                 "/profile",
             )
-            console.log("user: " + JSON.stringify(response.data));
-
-
+            console("profile")
             setUserData(response.data)
             return response.data
         }
         catch (ex) {
-            if (ex.response) {
-                toast.error(ex.response.message)
-            }
-            else {
-                toast.error("Network error")
-            }
+            console.log(ex)
+
+            const msg = ex.response?.data?.message || "Network error"
+            toast.error(msg)
         }
         finally {
             setLoading(false)
@@ -47,26 +53,28 @@ export const AppContextProvider = ({ children }) => {
     const contextValue = {
         userData, setUserData,
         getUserData,
-        loading, setLoading
+        loading, setLoading,
+        isLogged, setIsLogged
     }
 
     useEffect(() => {
-        getUserData()
-    }, [])
+        if (isLogged) {
+            getUserData()
+        }
+    }, [isLogged])
 
     useEffect(() => {
         const interceptor = api.interceptors.response.use(
             (response) => response,
 
             async (error) => {
-                console.log("found error");
 
                 if (error.response?.status === 401) {
                     setUserData({});
-                    setIsLogged(false);
                     toast.error("Session expired. Please login again.");
                     navigate("/login");
                 }
+                setIsLogged(false);
 
                 return Promise.reject(error);
             }
@@ -75,7 +83,7 @@ export const AppContextProvider = ({ children }) => {
         return () => {
             api.interceptors.response.eject(interceptor);
         };
-    }, []);
+    }, [navigate]);
 
     return (
         <AppContext.Provider value={contextValue}>

@@ -1,9 +1,8 @@
-import { toast } from "react-toastify"
-import { useAppContext } from "../context/AppContext"
+import { useAppContext } from "../context/AppContext.js"
 import { Navigate, Outlet } from "react-router-dom"
 
 export const ProtectedRoute = () => {
-    const { loading, userData } = useAppContext()
+    const { loading, userData, isLogged} = useAppContext()
 
     if (loading) {
         return (
@@ -13,7 +12,7 @@ export const ProtectedRoute = () => {
         )
     }
 
-    if (!userData?.username) {
+    if (!isLogged) {
         return <Navigate to="/login" state={{ message: "Please login first" }} replace />
     }
     if (userData?.isAccountVerified) {
@@ -24,9 +23,9 @@ export const ProtectedRoute = () => {
 }
 
 export const PublicRoute = () => {
-    const { userData } = useAppContext()
+    const { isLogged } = useAppContext()
 
-    if (userData?.username) {
+    if (isLogged) {
         return <Navigate to="/" state={{ message: "Already logged in" }} replace />
     }
 
