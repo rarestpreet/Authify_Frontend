@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import MenuBar from "../components/MenuBar";
-import { useRouteToast } from "../util/RouteRedirect";
+import { useRouteToast } from "../components/RouteRedirect.jsx";
 
 const Home = () => {
     useRouteToast()

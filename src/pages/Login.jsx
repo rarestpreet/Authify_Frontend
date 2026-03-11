@@ -1,17 +1,16 @@
-import { useState } from "react"
+import {useState} from "react"
 import Assets from "../assets/assets"
-import { Link, useNavigate } from "react-router-dom"
-import api from "../util/axiosConfig"
-import { useAppContext } from "../context/AppContext"
-import { useRouteToast } from "../util/RouteRedirect"
-import { toast } from "react-toastify"
+import {Link, useNavigate} from "react-router-dom"
+import {useAppContext} from "../context/AppContext.js"
+import {useRouteToast} from "../components/RouteRedirect.jsx"
+import apiMethod from "../services/api.js";
 
 const Login = () => {
-    const [isCreateAccount, setisCreateAccount] = useState(true)
+    const [isCreateAccount, setIsCreateAccount] = useState(true)
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const { loading, setLoading, getUserData } = useAppContext()
+    const {loading, setLoading, setUserData} = useAppContext()
     const navigate = useNavigate()
 
     useRouteToast()
@@ -20,6 +19,7 @@ const Login = () => {
         e.preventDefault()
 
         setLoading(true)
+
         if (isCreateAccount) {
             const user = {
                 username: name,
@@ -27,53 +27,14 @@ const Login = () => {
                 email: email
             }
 
-            try {
-                await api.post(
-                    "/register",
-                    user
-                )
-
-                toast.success("Account created successfully")
-                navigate("/")
-            }
-            catch (ex) {
-                if (ex.response) {
-                    toast.error(ex.response.data.message)
-                }
-                else {
-                    toast.error("Network Error")
-                }
-            }
-            finally {
-                setLoading(false)
-            }
-        }
-        else {
+            await apiMethod.register(user, navigate, setLoading)
+        } else {
             const user = {
                 password: password,
                 email: email
             }
 
-            try {
-                await api.post(
-                    "/login",
-                    user
-                )
-
-                toast.success("Logged in successfully")
-                await getUserData()
-                navigate("/")
-
-            } catch (ex) {
-                if (ex.response) {
-                    toast.error(ex.response.data.message)
-                } else {
-                    toast.error("Network Error")
-                }
-            }
-            finally {
-                setLoading(false)
-            }
+            await apiMethod.login(user, navigate, setLoading, setUserData)
         }
     }
 
@@ -93,11 +54,11 @@ const Login = () => {
                     left: "30px"
                 }}
             >
-                <img src={Assets.logo} alt="logo" height={32} width={32} />
+                <img src={Assets.logo} alt="logo" height={32} width={32}/>
                 <span>Authify</span>
             </Link>
 
-            <div className="card p-4" style={{ maxWidth: "400px", width: "100%" }}>
+            <div className="card p-4" style={{maxWidth: "400px", width: "100%"}}>
                 <h2 className="text-center mb-4">
                     {isCreateAccount ? "Create Account" : "Login"}
                 </h2>
@@ -116,8 +77,8 @@ const Login = () => {
                                     className="form-control"
                                     placeholder="Enter username"
                                     value={name}
-                                    onChange={(e) => setName(name => e.target.value)}
-                                    required />
+                                    onChange={(e) => setName(e.target.value)}
+                                    required/>
                             </div>
                         )
                     }
@@ -133,8 +94,8 @@ const Login = () => {
                             className="form-control"
                             placeholder="Enter email"
                             value={email}
-                            onChange={(e) => setEmail(email => e.target.value)}
-                            required />
+                            onChange={(e) => setEmail(e.target.value)}
+                            required/>
                     </div>
                     <div className="mb-3">
                         <label
@@ -148,8 +109,8 @@ const Login = () => {
                             className="form-control"
                             placeholder="Enter password"
                             value={password}
-                            onChange={(e) => setPassword(password => e.target.value)}
-                            required />
+                            onChange={(e) => setPassword(e.target.value)}
+                            required/>
                     </div>
                     <div className="d-flex justify-content-between mb-3">
                         <Link to="/reset-password" className="text-decoration-none">
@@ -170,8 +131,8 @@ const Login = () => {
                                     <span>Already have an account?</span>
                                     <span
                                         className="text-decoration-underline"
-                                        style={{ cursor: "pointer" }}
-                                        onClick={() => setisCreateAccount(false)}
+                                        style={{cursor: "pointer"}}
+                                        onClick={() => setIsCreateAccount(false)}
                                     >
                                         Login here
                                     </span>
@@ -182,8 +143,8 @@ const Login = () => {
                                     <span>Don't have an account?</span>
                                     <span
                                         className="text-decoration-underline"
-                                        style={{ cursor: "pointer" }}
-                                        onClick={() => setisCreateAccount(true)}
+                                        style={{cursor: "pointer"}}
+                                        onClick={() => setIsCreateAccount(true)}
                                     >
                                         Signup here
                                     </span>

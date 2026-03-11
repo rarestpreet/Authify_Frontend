@@ -1,69 +1,29 @@
-import { Link, useNavigate } from "react-router-dom";
-import Assets from "../assets/assets";
-import { useRef } from "react";
-import { useAppContext } from "../context/AppContext";
-import api from "../util/axiosConfig";
-import { useRouteToast } from "../util/RouteRedirect"
+import {Link, useNavigate} from "react-router-dom"
+import Assets from "../assets/assets"
+import {useRef} from "react"
+import {useAppContext} from "../context/AppContext.js"
+import {useRouteToast} from "../components/RouteRedirect.jsx"
+import inputHandler from "../util/inputHandler.js"
+import apiMethod from "../services/api.js";
+import handleToast from "../util/toast.js";
 
 const EmailVerify = () => {
     const inputRef = useRef([])
-    const { loading, setLoading } = useAppContext()
+    const {loading, setLoading, setUserData} = useAppContext()
     const navigate = useNavigate()
 
     useRouteToast()
 
-    const handleChange = (e, index) => {
-        const value = e.target.value.replace(/\D/, "")
-        e.target.value = value
-
-        if (value && index < 5) {
-            inputRef.current[index + 1].focus()
-        }
-    }
-
-    const handleKeyDown = (e, index) => {
-        if (e.key === "Backspace" && !e.target.value && index > 0) {
-            inputRef.current[index - 1].focus()
-        }
-    }
-
-
-    const handlePaste = (e) => {
-        e.preventDefault()
-        const paste = e.clipboardData.getData("text").slice(0, 6).split("")
-        paste.forEach((digit, i) => {
-            if (inputRef.current[i]) {
-                inputRef.current[i].value = digit
-            }
-        })
-        const next = paste.length < 6 ? paste.length : 5
-        inputRef.current[next].focus()
-    }
-
     const handleVerify = async () => {
         const otp = inputRef.current.map(input => input.value).join("")
-        if (otp.length != 6) {
-            toast.error("Please enter valid otp")
+        if (otp.length !== 6) {
+            handleToast.notifyError("Please enter valid otp")
             return
         }
 
-        setLoading(true)
+        await apiMethod.verifyEmail(otp, setLoading, navigate, setUserData)
 
-        try {
-            await api.post(
-                "/verify-email",
-                { otp }
-            )
 
-            toast.success("Email verified successfully")
-            navigate("/")
-        }
-        catch (ex) {
-            toast.error(ex.response ? ex.response.message : "Network error")
-        }
-        finally {
-            setLoading(false)
-        }
     }
 
 
@@ -78,7 +38,7 @@ const EmailVerify = () => {
                 to="/"
                 className="position-absolute top-0 start-0 p-4 d-flex align-items-center gap-2 text-decoration-none"
             >
-                <img src={Assets.logo} alt="logo" height={32} width={32} />
+                <img src={Assets.logo} alt="logo" height={32} width={32}/>
                 <span className="fs-4 fw-semibold text-light">
                     Authify
                 </span>
@@ -108,10 +68,12 @@ const EmailVerify = () => {
                             type="text"
                             maxLength={1}
                             className="form-control text-center fs-4 otp-input"
-                            ref={(el) => (inputRef.current[i] = el)}
-                            onChange={(e) => handleChange(e, i)}
-                            onKeyDown={(e) => handleKeyDown(e, i)}
-                            onPaste={(e) => handlePaste(e)}
+                            ref={(el) => {
+                                inputRef.current[i] = el
+                            }}
+                            onChange={(e) => inputHandler.handleChange(e, i, inputRef)}
+                            onKeyDown={(e) => inputHandler.handleKeyDown(e, i, inputRef)}
+                            onPaste={(e) => inputHandler.handlePaste(e, inputRef)}
                         />
                     ))}
                 </div>
