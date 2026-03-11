@@ -4,7 +4,7 @@ import Home from "./pages/Home"
 import Login from "./pages/Login"
 import EmailVerify from "./pages/EmailVerify"
 import ResetPassword from "./pages/ResetPassword"
-import { ProtectedRoute, PublicRoute } from "./util/CustomRoute"
+import { ProtectedRoute, PublicRoute } from "./components/CustomRoute.jsx"
 
 function App() {
 

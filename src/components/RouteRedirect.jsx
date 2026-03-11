@@ -1,18 +1,30 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { toast } from "react-toastify"
+import handleToast from "../util/toast.js"
 
 export const useRouteToast = () => {
     const location = useLocation()
     const navigate = useNavigate()
+    const lastMessageRef = useRef(null)
 
     useEffect(() => {
-        if (location.state?.message) {
-            toast.info(location.state.message)
+        const message = location.state?.message
+        const fromLogin = location.state?.fromLogin
+
+        if (fromLogin) {
+            navigate(location.pathname, { replace: true })
+            return
         }
 
-        navigate(location.pathname, { replace: true })
-    }, [location.state, location.pathname, navigate])
-
+        if (message) {
+            if (message !== lastMessageRef.current) {
+                lastMessageRef.current = message
+                handleToast.notifyInfo(message)
+            }
+            navigate(location.pathname, { replace: true })
+        } else {
+            lastMessageRef.current = null
+        }
+    }, [location.state?.message, location.state?.fromLogin, location.pathname, navigate])
 }
 

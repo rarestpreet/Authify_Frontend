@@ -1,77 +1,49 @@
-import { toast } from "react-toastify"
-import api from "../util/axiosConfig"
-import { useNavigate } from "react-router-dom"
+import api from "../util/axiosConfig.js"
+import {useNavigate} from "react-router-dom"
 import {useState, useEffect} from "react"
-import {AppContext} from "./AppContext.js";
+import {AppContext} from "../context/AppContext.js";
+import handleSessionStorage from "../services/handleSessionStorage.js";
+import apiMethod from "../services/api.js";
+import handleToast from "../util/toast.js";
 
-const AppContextProvider = ({ children }) => {
+const AppContextProvider = ({children}) => {
+    const storedUserData = handleSessionStorage.getUserProfile_Session()
 
-    const [userData, setUserData] = useState({
-        userId: "",
-        username: "",
-        isAccountVerified: false
-    })
-    const [isLogged, setIsLogged] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [userData, setUserData] = useState(storedUserData || {})
+    const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
 
-    const getUserData = async () => {
-        setLoading(true)
 
-        try {
-            const response = await api.get(
-                "/profile",
-            )
-
-            sessionStorage.setItem("userData", JSON.stringify(response.data))
-            setUserData(response.data)
-            return response.data
-        }
-        catch (ex) {
-            console.log(ex)
-
-            const msg = ex.response?.data?.message || "Network error"
-            toast.error(msg)
-        }
-        finally {
-            setLoading(false)
-        }
-    }
 
     const contextValue = {
         userData, setUserData,
-        getUserData,
-        loading, setLoading,
-        isLogged, setIsLogged
+        loading, setLoading
     }
 
     useEffect(() => {
-        if (isLogged) {
-            getUserData()
-        }
-    }, [isLogged])
+        apiMethod.getUserData(setLoading, setUserData)
+    }, [])
 
     useEffect(() => {
         const interceptor = api.interceptors.response.use(
             (response) => response,
 
             async (error) => {
-
                 if (error.response?.status === 401) {
-                    setUserData({});
-                    toast.error("Session expired. Please login again.");
-                    navigate("/login");
+                    handleSessionStorage.clearUserProfile_Session()
+                    setUserData({})
+                    handleToast.notifyError("Session expired. Please login again.")
+                    navigate("/login")
                 }
-                setIsLogged(false);
 
-                return Promise.reject(error);
+                return Promise.reject(error)
             }
         );
 
         return () => {
-            api.interceptors.response.eject(interceptor);
-        };
-    }, );
+            api.interceptors.response.eject(interceptor)
+        }
+    }, [navigate])
 
     return (
         <AppContext.Provider value={contextValue}>

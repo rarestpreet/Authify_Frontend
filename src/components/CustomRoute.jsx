@@ -2,7 +2,7 @@ import { useAppContext } from "../context/AppContext.js"
 import { Navigate, Outlet } from "react-router-dom"
 
 export const ProtectedRoute = () => {
-    const { loading, userData, isLogged} = useAppContext()
+    const { loading, userData } = useAppContext()
 
     if (loading) {
         return (
@@ -12,9 +12,10 @@ export const ProtectedRoute = () => {
         )
     }
 
-    if (!isLogged) {
+    if (!userData?.username) {
         return <Navigate to="/login" state={{ message: "Please login first" }} replace />
     }
+
     if (userData?.isAccountVerified) {
         return <Navigate to="/" state={{ message: "Your email is already verified" }} replace />
     }
@@ -23,9 +24,9 @@ export const ProtectedRoute = () => {
 }
 
 export const PublicRoute = () => {
-    const { isLogged } = useAppContext()
+    const { userData } = useAppContext()
 
-    if (isLogged) {
+    if (userData?.username) {
         return <Navigate to="/" state={{ message: "Already logged in" }} replace />
     }
 
